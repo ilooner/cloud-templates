@@ -1,0 +1,50 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: My VPC Template
+
+# Reference template at https://keithmsharp.wordpress.com/2016/11/15/building-a-vpc-with-aws-cloudformation/
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      # TODO pass in id parameters and tag with id
+      Tags:
+        - Key: Name
+          Value: Cloudformation Test VPC
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+        # TODO pass in id parameters and tag with id
+      Tags:
+        - Key: Name
+          Value: Internet Gateway
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: VPC
+      InternetGatewayId:
+        Ref: InternetGateway
+  BastionHostSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPC
+      CidrBlock: 10.0.0.0/28
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: Bastion Host Subnet
+  BastionHostSubnetRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+          Ref: VPC
+      Tags:
+        - Key: Name
+          Value: Bastion Host Subnet Route Table
