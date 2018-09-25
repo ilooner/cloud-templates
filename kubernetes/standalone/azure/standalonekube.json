@@ -129,13 +129,6 @@
       "metadata": {
         "description": "Maximum number of pods that can run on a node."
       }
-    },
-    "enableRBAC": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "boolean flag to turn on and off of RBAC"
-      }
     }
   },
   "resources": [
@@ -147,7 +140,7 @@
       "name": "[parameters('resourceName')]",
       "properties": {
         "kubernetesVersion": "[parameters('kubernetesVersion')]",
-        "enableRBAC": "[parameters('enableRBAC')]",
+        "enableRBAC": "true",
         "dnsPrefix": "[parameters('dnsPrefix')]",
         "addonProfiles": {
           "httpApplicationRouting": {
