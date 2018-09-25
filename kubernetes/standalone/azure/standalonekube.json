@@ -69,7 +69,7 @@
     },
     "kubernetesVersion": {
       "type": "string",
-      "defaultValue": "1.7.7",
+      "defaultValue": "1.11.2",
       "metadata": {
         "description": "The version of Kubernetes."
       }
@@ -86,12 +86,6 @@
       "defaultValue": "East US",
       "metadata": {
         "description": "Specify the region for your OMS workspace"
-      }
-    },
-    "workspaceName": {
-      "type": "string",
-      "metadata": {
-        "description": "Specify the name of the OMS workspace"
       }
     },
     "omsWorkspaceId": {
