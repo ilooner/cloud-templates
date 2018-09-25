@@ -106,13 +106,6 @@
         "description": "Select the SKU for your workspace"
       }
     },
-    "enableHttpApplicationRouting": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "boolean flag to turn on and off of http application routing"
-      }
-    },
     "networkPlugin": {
       "type": "string",
       "allowedValues": [
@@ -144,7 +137,7 @@
         "dnsPrefix": "[parameters('dnsPrefix')]",
         "addonProfiles": {
           "httpApplicationRouting": {
-            "enabled": "[parameters('enableHttpApplicationRouting')]"
+            "enabled": "true"
           },
           "omsagent": {
             "enabled": "[parameters('enableOmsAgent')]",
