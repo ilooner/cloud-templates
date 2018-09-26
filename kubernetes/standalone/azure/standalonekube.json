@@ -2,10 +2,16 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "resourceName": {
+    "deploymentId": {
       "type": "string",
       "metadata": {
-        "description": "The name of the Managed Cluster resource."
+        "description": "The resource group name."
+      }
+    },
+    "subscriptionId": {
+      "type": "string",
+      "metadata": {
+        "description": "The subscription id."
       }
     },
     "location": {
@@ -14,10 +20,10 @@
         "description": "The location of AKS resource."
       }
     },
-    "dnsPrefix": {
+    "workspaceLocation": {
       "type": "string",
       "metadata": {
-        "description": "Optional DNS prefix to use with hosted Kubernetes API server FQDN."
+        "description": "The location of AKS resource."
       }
     },
     "osDiskSizeGB": {
@@ -74,38 +80,6 @@
         "description": "The version of Kubernetes."
       }
     },
-    "enableOmsAgent": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "boolean flag to turn on and off of omsagent addon"
-      }
-    },
-    "workspaceRegion": {
-      "type": "string",
-      "defaultValue": "East US",
-      "metadata": {
-        "description": "Specify the region for your OMS workspace"
-      }
-    },
-    "omsWorkspaceId": {
-      "type": "string",
-      "metadata": {
-        "description": "Specify the resource id of the OMS workspace"
-      }
-    },
-    "omsSku": {
-      "type": "string",
-      "defaultValue": "standalone",
-      "allowedValues": [
-        "free",
-        "standalone",
-        "pernode"
-      ],
-      "metadata": {
-        "description": "Select the SKU for your workspace"
-      }
-    },
     "networkPlugin": {
       "type": "string",
       "allowedValues": [
@@ -124,25 +98,31 @@
       }
     }
   },
+  "variables": {
+    "resourceGroupName": "[parameters('deploymentId')]",
+    "omswsName": "[concat('omsws-', parameters('deploymentId'))]",
+    "clustername": "cluster"
+  },
   "resources": [
     {
       "apiVersion": "2018-03-31",
-      "dependsOn": [],
+      "dependsOn": ["[variables('resourceGroupName')]"],
       "type": "Microsoft.ContainerService/managedClusters",
       "location": "[parameters('location')]",
-      "name": "[parameters('resourceName')]",
+      "name": "[variables('clustername')]",
+      "dependsOn": ["[variables('omswsName')]"],
       "properties": {
         "kubernetesVersion": "[parameters('kubernetesVersion')]",
-        "enableRBAC": "true",
-        "dnsPrefix": "[parameters('dnsPrefix')]",
+        "enableRBAC": true,
+        "dnsPrefix": "clust",
         "addonProfiles": {
           "httpApplicationRouting": {
-            "enabled": "true"
+            "enabled": true
           },
           "omsagent": {
-            "enabled": "[parameters('enableOmsAgent')]",
+            "enabled": true,
             "config": {
-              "logAnalyticsWorkspaceResourceID": "[parameters('omsWorkspaceId')]"
+              "logAnalyticsWorkspaceResourceID": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('omswsName'))]"
             }
           }
         },
@@ -163,48 +143,21 @@
         "networkProfile": {
           "networkPlugin": "[parameters('networkPlugin')]"
         }
-      },
-      "tags": {}
+      }
     },
     {
-      "type": "Microsoft.Resources/deployments",
-      "name": "SolutionDeployment",
-      "apiVersion": "2017-05-10",
-      "resourceGroup": "[split(parameters('omsWorkspaceId'),'/')[4]]",
-      "subscriptionId": "[split(parameters('omsWorkspaceId'),'/')[2]]",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "name": "[variables('omswsName')]",
+      "apiVersion": "2017-03-15-preview",
+      "location": "[parameters('workspaceLocation')]",
       "properties": {
-        "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "parameters": {},
-          "variables": {},
-          "resources": [
-            {
-              "apiVersion": "2015-11-01-preview",
-              "type": "Microsoft.OperationsManagement/solutions",
-              "location": "[parameters('workspaceRegion')]",
-              "name": "[concat('ContainerInsights', '(', split(parameters('omsWorkspaceId'),'/')[8], ')')]",
-              "properties": {
-                "workspaceResourceId": "[parameters('omsWorkspaceId')]"
-              },
-              "plan": {
-                "name": "[concat('ContainerInsights', '(', split(parameters('omsWorkspaceId'),'/')[8], ')')]",
-                "product": "[concat('OMSGallery/', 'ContainerInsights')]",
-                "promotionCode": "",
-                "publisher": "Microsoft"
-              }
-            }
-          ]
+        "sku": {
+          "Name": "Standalone"
+        },
+        "features": {
+          "searchVersion": 1
         }
-      },
-      "dependsOn": []
+      }
     }
-  ],
-  "outputs": {
-    "controlPlaneFQDN": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.ContainerService/managedClusters/', parameters('resourceName'))).fqdn]"
-    }
-  }
+  ]
 }
